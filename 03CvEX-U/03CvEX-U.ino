@@ -5,22 +5,20 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
-LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x3F for a 16 chars and 2 line display
-
 #define SS_PIN 5
 #define RST_PIN 0
-
+LiquidCrystal_I2C lcd(0x27,16,2);  
 MFRC522 mfrc522(SS_PIN, RST_PIN);   
 
 String lastRfid = "";
 unsigned long lastTimestamp = 0;
 
-char ssid[] = "HG***1*455**V5";
-char pass[] = "QingtubolMF2S";
+char ssid[] = "CvEX-U";
+char pass[] = "CvEX-U_pass";
 
 void setup() 
 {
-  Serial.begin(115200);   // Initiate serial 
+  Serial.begin(115200);    
   lcd.init();
   lcd.clear();         
   lcd.backlight();      
@@ -28,22 +26,22 @@ void setup()
   while (WiFi.status() != WL_CONNECTED) {
     lcd.clear();
     Serial.println("No Connection!");
-    lcd.setCursor(1,0);   //Move cursor to character 2 on line 1
+    lcd.setCursor(1,0);   
     lcd.print("Connecting....");
     delay (1500);
   }
 
   Serial.println("WiFi Connected");
-  lcd.setCursor(1,0);   //Move cursor to character 2 on line 1
+  lcd.setCursor(1,0);   
   lcd.print("WiFi Connected");
   delay (1500);
   lcd.clear();
 
-  SPI.begin();          // Initiate SPI bus
-  mfrc522.PCD_Init();   // Initiate MFRC522
+  SPI.begin();          
+  mfrc522.PCD_Init();   
   lcd.setCursor(5,0);   
   lcd.print("CvEX-U");
-  lcd.setCursor(3,1);   //Move cursor to character 2 on line 1
+  lcd.setCursor(3,1);   
   lcd.print("RFID Ready");
 
   Serial.println();
@@ -55,14 +53,11 @@ void loop()
   {
     return;
   }
-  // Select one of the cards
   if ( ! mfrc522.PICC_ReadCardSerial()) 
   {
     return;
   }
   
-  // Show UID on serial monitor
-
   String rfid_code = "";
   byte letter;
   for (byte i = 0; i < mfrc522.uid.size; i++) 
@@ -70,7 +65,7 @@ void loop()
     rfid_code.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
     rfid_code.concat(String(mfrc522.uid.uidByte[i], HEX));
   }
-  rfid_code.toUpperCase();  // Convert to uppercase
+  rfid_code.toUpperCase();  
 
   unsigned long currentTimestamp = millis();  
 
@@ -119,7 +114,6 @@ void loop()
 
 void Sheet(String rfid_code, int remarks) 
 {
-    // Remove leading and trailing whitespace
     rfid_code.trim();
     rfid_code.replace(" ", "");
 

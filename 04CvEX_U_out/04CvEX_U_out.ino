@@ -2,47 +2,62 @@
 #include <MFRC522.h>
 #include <HTTPClient.h>
 #include <WiFi.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
 #define SS_PIN 5
 #define RST_PIN 0
-
+LiquidCrystal_I2C lcd(0x27,16,2);  
 MFRC522 mfrc522(SS_PIN, RST_PIN);   
 
 String lastRfid = "";
 unsigned long lastTimestamp = 0;
 
-char ssid[] = "HG***1*455**V5";
-char pass[] = "QingtubolMF2S";
+char ssid[] = "CvEX-U";
+char pass[] = "CvEX-U_pass";
 
 void setup() 
 {
-  Serial.begin(115200);   
+  Serial.begin(115200);    
+  lcd.init();
+  lcd.clear();         
+  lcd.backlight();      
   WiFi.begin(ssid, pass);
   while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+    lcd.clear();
+    Serial.println("No Connection!");
+    lcd.setCursor(1,0);   
+    lcd.print("Connecting....");
+    delay (1500);
   }
-  Serial.println("Connected to WiFi");
+
+  Serial.println("WiFi Connected");
+  lcd.setCursor(1,0);   
+  lcd.print("WiFi Connected");
+  delay (1500);
+  lcd.clear();
 
   SPI.begin();          
-  mfrc522.PCD_Init();  
-  Serial.println("Approximate your card to the reader...");
+  mfrc522.PCD_Init();   
+  lcd.setCursor(5,0);   
+  lcd.print("CvEX-U");
+  lcd.setCursor(3,1);   
+  lcd.print("RFID Ready");
+
   Serial.println();
 }
 
 void loop() 
 {
-  // Look for new cards
   if ( ! mfrc522.PICC_IsNewCardPresent()) 
   {
     return;
   }
-  // Select one of the cards
   if ( ! mfrc522.PICC_ReadCardSerial()) 
   {
     return;
   }
   
-  // Show UID on serial monitor
   String rfid_code = "";
   byte letter;
   for (byte i = 0; i < mfrc522.uid.size; i++) 
@@ -50,22 +65,46 @@ void loop()
     rfid_code.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
     rfid_code.concat(String(mfrc522.uid.uidByte[i], HEX));
   }
-  rfid_code.toUpperCase();  // Convert to uppercase
+  rfid_code.toUpperCase();  
 
   unsigned long currentTimestamp = millis();  
 
-  if (rfid_code == lastRfid && (currentTimestamp - lastTimestamp < 5000)) {
-    Serial.println("You already tapped");
+
+  if (rfid_code == lastRfid && (currentTimestamp - lastTimestamp < 30000)) {
+    lcd.clear();
+    lcd.setCursor(1,0);   
+    lcd.print("Please proceed");
+    lcd.setCursor(3,1);   
+    lcd.print("to payment");
+    delay (1500);
+    lcd.clear();
+    lcd.setCursor(5,0);   
+    lcd.print("CvEX-U");
+    lcd.setCursor(3,1);   
+    lcd.print("RFID Ready");
     return;  
   }
 
   int remarks = 1;
-  Serial.print("Exit");
+  lcd.clear();
+  lcd.setCursor(1,0);  
+  lcd.print("Processing....");
+
   Serial.println(rfid_code);
   Serial.println(remarks);
   Sheet(rfid_code, remarks);
-  
-  delay(5000); 
+  delay(3000);
+
+  lcd.clear();
+  lcd.setCursor(3,0);   
+  lcd.print("Keep Safe!");
+  delay (1500);
+  lcd.clear();
+
+  lcd.setCursor(5,0);   
+  lcd.print("CvEX-U");
+  lcd.setCursor(3,1);   
+  lcd.print("RFID Ready");
 
   lastRfid = rfid_code;
   lastTimestamp = currentTimestamp;
@@ -73,7 +112,6 @@ void loop()
 
 void Sheet(String rfid_code, int remarks) 
 {
-    // Remove leading and trailing whitespace
     rfid_code.trim();
     rfid_code.replace(" ", "");
 
